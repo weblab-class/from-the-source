@@ -1,0 +1,225 @@
+import { ArrowLeft, Award, Target, CheckCircle, Flame, TrendingUp, User } from 'lucide-react';
+import { Button } from '@/app/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Badge } from '@/app/components/ui/badge';
+import { Progress } from '@/app/components/ui/progress';
+import { mockUserProfile } from '@/app/data/mock-data';
+
+interface ProfileProps {
+  onBack: () => void;
+}
+
+export function Profile({ onBack }: ProfileProps) {
+  const profile = mockUserProfile;
+  const nextLevelPoints = 15000;
+  const progressToNextLevel = (profile.points / nextLevelPoints) * 100;
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <Button onClick={onBack} variant="ghost" className="lowercase mb-6 gap-2">
+        <ArrowLeft className="w-4 h-4" />
+        back to bounties
+      </Button>
+
+      {/* Profile Header */}
+      <Card className="mb-8">
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+            <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center">
+              <User className="w-12 h-12 text-primary-foreground" />
+            </div>
+            
+            <div className="flex-1 text-center md:text-left">
+              <h1 className="lowercase tracking-wide mb-2">{profile.username}</h1>
+              <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-4">
+                <Badge variant="secondary" className="lowercase">
+                  <Flame className="w-3 h-3 mr-1" />
+                  {profile.streak} day streak
+                </Badge>
+                <Badge variant="outline" className="lowercase">
+                  joined {new Date(profile.joinedDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </Badge>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="lowercase text-muted-foreground">level progress</span>
+                  <span className="lowercase font-semibold">
+                    {profile.points.toLocaleString()} / {nextLevelPoints.toLocaleString()} points
+                  </span>
+                </div>
+                <Progress value={progressToNextLevel} className="h-2" />
+              </div>
+            </div>
+
+            <div className="text-center">
+              <div className="text-4xl font-semibold text-primary mb-1">
+                {profile.points.toLocaleString()}
+              </div>
+              <div className="text-sm text-muted-foreground lowercase">total points</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="lowercase flex items-center gap-2 text-sm">
+              <Target className="w-4 h-4 text-blue-600" />
+              bounties posted
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-semibold text-blue-600">{profile.bountiesPosted}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="lowercase flex items-center gap-2 text-sm">
+              <TrendingUp className="w-4 h-4 text-green-600" />
+              bounties claimed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-semibold text-green-600">{profile.bountiesClaimed}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="lowercase flex items-center gap-2 text-sm">
+              <Award className="w-4 h-4 text-amber-600" />
+              recipes submitted
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-semibold text-amber-600">{profile.recipesSubmitted}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="lowercase flex items-center gap-2 text-sm">
+              <CheckCircle className="w-4 h-4 text-purple-600" />
+              verifications
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-semibold text-purple-600">{profile.verificationsCompleted}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Achievements */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="lowercase">achievements</CardTitle>
+          <CardDescription className="lowercase">badges earned for your contributions</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                <Trophy className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div>
+                <p className="font-semibold lowercase">top hunter</p>
+                <p className="text-sm text-muted-foreground lowercase">ranked #1 this month</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <Flame className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <p className="font-semibold lowercase">on fire</p>
+                <p className="text-sm text-muted-foreground lowercase">12 day login streak</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <p className="font-semibold lowercase">master verifier</p>
+                <p className="text-sm text-muted-foreground lowercase">45+ verifications</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                <Award className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="font-semibold lowercase">recipe expert</p>
+                <p className="text-sm text-muted-foreground lowercase">15+ recipes submitted</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="lowercase">recent activity</CardTitle>
+          <CardDescription className="lowercase">your latest contributions</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 pb-4 border-b">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Award className="w-4 h-4 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="lowercase font-medium">submitted recipe for "pink sauce"</p>
+                <p className="text-sm text-muted-foreground lowercase">from the halal guys · earned 800 points</p>
+                <p className="text-xs text-muted-foreground lowercase mt-1">8 days ago</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 pb-4 border-b">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Target className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="lowercase font-medium">posted bounty</p>
+                <p className="text-sm text-muted-foreground lowercase">"chipotle mayo from burgerville" · 500 points</p>
+                <p className="text-xs text-muted-foreground lowercase mt-1">10 days ago</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="w-4 h-4 text-purple-600" />
+              </div>
+              <div className="flex-1">
+                <p className="lowercase font-medium">verified recipe</p>
+                <p className="text-sm text-muted-foreground lowercase">"garlic noodles from thanh long" · rated 9.5/10</p>
+                <p className="text-xs text-muted-foreground lowercase mt-1">12 days ago</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function Trophy({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+      <path d="M4 22h16" />
+      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </svg>
+  );
+}
