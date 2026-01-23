@@ -1,3 +1,5 @@
+[doc](https://docs.google.com/document/d/1osEXx8tMVWDGZNl7sjw-mpyaFXgemkHl1dLr8uPikcs/edit?usp=sharing)
+
 # From the Source
 
 **From the Source** is a food and recipe platform built for people who love discovering, recreating, and reverse-engineering their favorite restaurant dishes.
