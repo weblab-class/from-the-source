@@ -101,7 +101,6 @@ const atlasURI = "mongodb+srv://mhhan_db_user:abcd@fromthesource.idrfeoz.mongodb
 mongoose.connect(atlasURI)
   .then(() => console.log('✅ Connected to MongoDB'))
   .catch((err) => console.error('❌ MongoDB connection error:', err));
-
 // Routes
 app.use('/api/bounties', bountyRoutes);
 app.use('/api/recipes', recipeRoutes);
@@ -113,7 +112,7 @@ app.get('/', (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

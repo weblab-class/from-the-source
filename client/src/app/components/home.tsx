@@ -1,17 +1,34 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Search, Plus, Clock, MapPin, Award, ChefHat } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
+import { AddressInput } from '@/app/components/AddressInput';
 import { Badge } from '@/app/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
-import { mockBounties, mockRecipes, type Bounty } from '@/app/data/mock-data';
+import { mockRecipes } from '@/app/data/mock-data';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
+import { getBounties, createBounty } from '@/app/api';
 
 interface HomeProps {
   onNavigateToRestaurant: (restaurantId: string) => void;
   onNavigateToSubmit: () => void;
+}
+
+interface Bounty {
+  _id: string;
+  dishName: string;
+  restaurant: string;
+  location: string;
+  category: string;
+  pointReward: number;
+  postedBy: string;
+  description: string;
+  status: string;
+  claimedBy?: string;
+  wantedBy: string[];
 }
 
 export function Home({ onNavigateToRestaurant, onNavigateToSubmit }: HomeProps) {
@@ -20,16 +37,58 @@ export function Home({ onNavigateToRestaurant, onNavigateToSubmit }: HomeProps) 
   const [cuisineFilter, setCuisineFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedBounty, setSelectedBounty] = useState<Bounty | null>(null);
+  
+  // API state
+  const [bounties, setBounties] = useState<Bounty[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Form state for posting bounty
+  const [newBounty, setNewBounty] = useState({
+    dishName: '',
+    restaurant: '',
+    location: '',
+    category: '',
+    description: '',
+    pointReward: 500
+  });
+
+  // Fetch bounties from API
+  useEffect(() => {
+    fetchBounties();
+  }, []);
+
+  const fetchBounties = async () => {
+    try {
+      const data = await getBounties();
+      setBounties(data);
+    } catch (error) {
+      console.error('Error fetching bounties:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePostBounty = async () => {
+    try {
+      await createBounty(newBounty);
+      setNewBounty({ dishName: '', restaurant: '', location: '', category: '', description: '', pointReward: 500 });
+      setDialogOpen(false);
+      fetchBounties(); // Refresh the list
+    } catch (error) {
+      console.error('Error posting bounty:', error);
+    }
+  };
 
   // Get unique locations
-  const locations = Array.from(new Set(mockBounties.map(b => b.location))).sort();
+  const locations = Array.from(new Set(bounties.map(b => b.location))).filter(Boolean).sort();
 
-  const filteredBounties = mockBounties.filter(bounty => {
-    const matchesSearch = bounty.recipeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         bounty.restaurantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         bounty.location.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredBounties = bounties.filter(bounty => {
+    const matchesSearch = (bounty.dishName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (bounty.restaurant || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (bounty.location || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesLocation = locationFilter === 'all' || bounty.location === locationFilter;
-    const matchesCuisine = cuisineFilter === 'all' || bounty.cuisine === cuisineFilter;
+    const matchesCuisine = cuisineFilter === 'all' || bounty.category === cuisineFilter;
     const matchesStatus = statusFilter === 'all' || bounty.status === statusFilter;
     
     return matchesSearch && matchesLocation && matchesCuisine && matchesStatus;
@@ -56,14 +115,22 @@ export function Home({ onNavigateToRestaurant, onNavigateToSubmit }: HomeProps) 
 
       {/* Post Bounty Button */}
       <div className="mb-8 flex justify-center">
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="lg" className="lowercase gap-2">
               <Plus className="w-5 h-5" />
               post a bounty
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent 
+              className="max-w-md" 
+              onPointerDownOutside={(e) => {
+                const target = e.target as HTMLElement;
+                if (target.closest('.pac-container') || target.closest('.pac-item')) {
+                  e.preventDefault();
+                }
+              }}
+            >
             <DialogHeader>
               <DialogTitle className="lowercase">post a new bounty</DialogTitle>
               <DialogDescription className="lowercase">
@@ -73,19 +140,34 @@ export function Home({ onNavigateToRestaurant, onNavigateToSubmit }: HomeProps) 
             <div className="space-y-4 mt-4">
               <div>
                 <label className="lowercase block mb-2">recipe name</label>
-                <Input placeholder="e.g., the green sauce from tacos el gordo" className="lowercase" />
+                <Input 
+                  placeholder="e.g., the green sauce from tacos el gordo" 
+                  className="lowercase"
+                  value={newBounty.dishName}
+                  onChange={(e) => setNewBounty({...newBounty, dishName: e.target.value})}
+                />
               </div>
               <div>
                 <label className="lowercase block mb-2">restaurant name</label>
-                <Input placeholder="restaurant name" className="lowercase" />
+                <Input 
+                  placeholder="restaurant name" 
+                  className="lowercase"
+                  value={newBounty.restaurant}
+                  onChange={(e) => setNewBounty({...newBounty, restaurant: e.target.value})}
+                />
               </div>
               <div>
                 <label className="lowercase block mb-2">location</label>
-                <Input placeholder="city or address" className="lowercase" />
+                <AddressInput
+                  placeholder="search for restaurant or address"
+                  className="lowercase"
+                  value={newBounty.location}
+                  onChange={(address) => setNewBounty({...newBounty, location: address})}
+                />
               </div>
               <div>
                 <label className="lowercase block mb-2">cuisine type</label>
-                <Select>
+                <Select value={newBounty.category} onValueChange={(value) => setNewBounty({...newBounty, category: value})}>
                   <SelectTrigger className="lowercase">
                     <SelectValue placeholder="select cuisine" />
                   </SelectTrigger>
@@ -94,18 +176,34 @@ export function Home({ onNavigateToRestaurant, onNavigateToSubmit }: HomeProps) 
                     <SelectItem value="italian" className="lowercase">italian</SelectItem>
                     <SelectItem value="asian" className="lowercase">asian</SelectItem>
                     <SelectItem value="american" className="lowercase">american</SelectItem>
+                    <SelectItem value="vietnamese" className="lowercase">vietnamese</SelectItem>
+                    <SelectItem value="japanese" className="lowercase">japanese</SelectItem>
+                    <SelectItem value="middle eastern" className="lowercase">middle eastern</SelectItem>
+                    <SelectItem value="deli" className="lowercase">deli</SelectItem>
+                    <SelectItem value="other" className="lowercase">other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <label className="lowercase block mb-2">description</label>
-                <Input placeholder="tell us more about what makes this special" className="lowercase" />
+                <Input 
+                  placeholder="tell us more about what makes this special" 
+                  className="lowercase"
+                  value={newBounty.description}
+                  onChange={(e) => setNewBounty({...newBounty, description: e.target.value})}
+                />
               </div>
               <div>
                 <label className="lowercase block mb-2">point reward</label>
-                <Input type="number" placeholder="500" className="lowercase" />
+                <Input 
+                  type="number" 
+                  placeholder="500" 
+                  className="lowercase"
+                  value={newBounty.pointReward}
+                  onChange={(e) => setNewBounty({...newBounty, pointReward: parseInt(e.target.value) || 0})}
+                />
               </div>
-              <Button className="w-full lowercase">submit bounty</Button>
+              <Button className="w-full lowercase" onClick={handlePostBounty}>submit bounty</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -149,10 +247,7 @@ export function Home({ onNavigateToRestaurant, onNavigateToSubmit }: HomeProps) 
               <SelectItem value="mexican" className="lowercase">mexican</SelectItem>
               <SelectItem value="italian" className="lowercase">italian</SelectItem>
               <SelectItem value="american" className="lowercase">american</SelectItem>
-              <SelectItem value="vietnamese" className="lowercase">vietnamese</SelectItem>
-              <SelectItem value="japanese fusion" className="lowercase">japanese fusion</SelectItem>
-              <SelectItem value="middle eastern" className="lowercase">middle eastern</SelectItem>
-              <SelectItem value="deli" className="lowercase">deli</SelectItem>
+              <SelectItem value="asian" className="lowercase">asian</SelectItem>
             </SelectContent>
           </Select>
 
@@ -178,46 +273,52 @@ export function Home({ onNavigateToRestaurant, onNavigateToSubmit }: HomeProps) 
         </TabsList>
 
         <TabsContent value="bounties" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredBounties.map((bounty) => (
-              <Card key={bounty.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedBounty(bounty)}>
-                <CardHeader>
-                  <div className="flex items-start justify-between mb-2">
-                    <Badge className={`lowercase ${getStatusColor(bounty.status)}`}>
-                      {bounty.status}
-                    </Badge>
-                    <div className="flex items-center gap-1 text-primary">
-                      <Award className="w-5 h-5" />
-                      <span className="font-semibold">{bounty.points}</span>
-                    </div>
-                  </div>
-                  <CardTitle className="lowercase line-clamp-2">{bounty.recipeName}</CardTitle>
-                  <CardDescription className="lowercase">{bounty.restaurantName}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground lowercase">
-                      <MapPin className="w-4 h-4" />
-                      {bounty.location}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground lowercase">
-                      <ChefHat className="w-4 h-4" />
-                      {bounty.cuisine}
-                    </div>
-                    {bounty.claimedBy && (
-                      <div className="flex items-center gap-2 text-sm text-amber-600 lowercase">
-                        <Clock className="w-4 h-4" />
-                        claimed · {bounty.timeRemaining} left
+          {loading ? (
+            <div className="text-center py-8 lowercase">loading bounties...</div>
+          ) : filteredBounties.length === 0 ? (
+            <div className="text-center py-8 lowercase text-muted-foreground">no bounties found. be the first to post one!</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredBounties.map((bounty) => (
+                <Card key={bounty._id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedBounty(bounty)}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between mb-2">
+                      <Badge className={`lowercase ${getStatusColor(bounty.status)}`}>
+                        {bounty.status}
+                      </Badge>
+                      <div className="flex items-center gap-1 text-primary">
+                        <Award className="w-5 h-5" />
+                        <span className="font-semibold">{bounty.pointReward}</span>
                       </div>
-                    )}
-                    <p className="text-sm text-muted-foreground line-clamp-2 lowercase mt-2">
-                      {bounty.description}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    </div>
+                    <CardTitle className="lowercase line-clamp-2">{bounty.dishName}</CardTitle>
+                    <CardDescription className="lowercase">{bounty.restaurant}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground lowercase">
+                        <MapPin className="w-4 h-4" />
+                        {bounty.location || 'no location'}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground lowercase">
+                        <ChefHat className="w-4 h-4" />
+                        {bounty.category || 'uncategorized'}
+                      </div>
+                      {bounty.claimedBy && (
+                        <div className="flex items-center gap-2 text-sm text-amber-600 lowercase">
+                          <Clock className="w-4 h-4" />
+                          claimed
+                        </div>
+                      )}
+                      <p className="text-sm text-muted-foreground line-clamp-2 lowercase mt-2">
+                        {bounty.description}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="recipes" className="mt-6">
@@ -273,9 +374,9 @@ export function Home({ onNavigateToRestaurant, onNavigateToSubmit }: HomeProps) 
         <Dialog open={!!selectedBounty} onOpenChange={() => setSelectedBounty(null)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle className="lowercase text-2xl">{selectedBounty.recipeName}</DialogTitle>
+              <DialogTitle className="lowercase text-2xl">{selectedBounty.dishName}</DialogTitle>
               <DialogDescription className="lowercase">
-                {selectedBounty.restaurantName} · {selectedBounty.location}
+                {selectedBounty.restaurant} · {selectedBounty.location}
               </DialogDescription>
             </DialogHeader>
             
@@ -286,7 +387,7 @@ export function Home({ onNavigateToRestaurant, onNavigateToSubmit }: HomeProps) 
                 </Badge>
                 <div className="flex items-center gap-2 text-primary">
                   <Award className="w-6 h-6" />
-                  <span className="text-2xl font-semibold">{selectedBounty.points}</span>
+                  <span className="text-2xl font-semibold">{selectedBounty.pointReward}</span>
                   <span className="lowercase text-muted-foreground">points</span>
                 </div>
               </div>
@@ -303,16 +404,13 @@ export function Home({ onNavigateToRestaurant, onNavigateToSubmit }: HomeProps) 
 
               <div className="flex items-center gap-2 text-sm text-muted-foreground lowercase">
                 <ChefHat className="w-4 h-4" />
-                cuisine: {selectedBounty.cuisine}
+                cuisine: {selectedBounty.category || 'uncategorized'}
               </div>
 
               {selectedBounty.claimedBy ? (
                 <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
                   <p className="lowercase text-amber-800">
                     claimed by <span className="font-semibold">{selectedBounty.claimedBy}</span>
-                  </p>
-                  <p className="lowercase text-amber-600 text-sm mt-1">
-                    {selectedBounty.timeRemaining} remaining to submit
                   </p>
                 </div>
               ) : (
