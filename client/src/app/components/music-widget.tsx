@@ -147,8 +147,8 @@ export function MusicWidget({
       <audio
         ref={audioRef}
         src={src}
-        loop
         preload="auto"
+        onEnded={nextTrack}
         onPlay={() => setStatus("playing")}
         onPause={() => setStatus("paused")}
         onError={() => {
