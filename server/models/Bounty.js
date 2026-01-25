@@ -22,7 +22,7 @@ const bountySchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['sauce', 'entree', 'side', 'bread', 'dessert', 'drink', 'seasoning', 'other'],
+    enum: ['mexican', 'italian', 'asian', 'american', 'vietnamese', 'japanese', 'middle eastern', 'deli', 'others'],
     default: 'other'
   },
 
