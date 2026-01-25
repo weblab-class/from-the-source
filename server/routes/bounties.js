@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Bounty = require('../models/Bounty');
+const Restaurant = require('../models/Restaurant');
 
 // GET /api/bounties - Get all bounties
 router.get('/', async (req, res) => {
@@ -36,16 +37,38 @@ router.get('/:id', async (req, res) => {
 // POST /api/bounties - Create new bounty
 router.post('/', async (req, res) => {
   try {
-    const { dishName, restaurant, location, description, category, pointReward, postedBy } = req.body;
+    const { dishName, restaurant, location, description, category, pointReward, postedBy, cuisine } = req.body;
+
+    // Normalize restaurant name so we can reliably match between bounties and restaurants
+    const normalizedRestaurantName = (restaurant || '').trim();
+
+    // If we have a restaurant name, ensure there is a Restaurant document for it.
+    // This is what allows /api/restaurants to return cuisine/location instead of null.
+    if (normalizedRestaurantName) {
+      await Restaurant.findOneAndUpdate(
+        { name: normalizedRestaurantName },
+        {
+          $setOnInsert: { name: normalizedRestaurantName },
+          // Only set fields if they were provided (avoid overwriting existing data with empty values)
+          $set: {
+            ...(location ? { location } : {}),
+            ...(cuisine ? { cuisine } : {}),
+          },
+        },
+        { upsert: true, new: true }
+      );
+    }
 
     const newBounty = new Bounty({
       dishName,
-      restaurant,
+      // Store the normalized name so it matches Restaurant.name exactly
+      restaurant: normalizedRestaurantName,
       location,
       description,
       category,
       pointReward,
-      postedBy
+      postedBy,
+      ...(cuisine ? { cuisine } : {}),
     });
 
     const savedBounty = await newBounty.save();

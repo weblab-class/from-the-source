@@ -67,7 +67,15 @@ export default function App() {
       case 'home':
         return <Home onNavigateToRestaurant={navigateToRestaurant} onNavigateToSubmit={() => setCurrentPage('submit')} />;
       case 'restaurant':
-        return <RestaurantPage restaurantId={selectedRestaurant} onBack={() => setCurrentPage('restaurants')} />;
+        return (
+          <RestaurantPage
+            restaurantId={selectedRestaurant}
+            onBack={() => {
+              setCurrentPage('restaurants');
+              setSelectedRestaurant(null);
+            }}
+          />
+        );
       case 'restaurants':
         return <RestaurantsPage onNavigateToRestaurant={navigateToRestaurant} />;
       case 'leaderboard':
