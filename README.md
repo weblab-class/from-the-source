@@ -22,6 +22,8 @@ From the Source turns that curiosity into a game:
 
 ## Core Features
 
+- **MUSIC**: THE WEBPAGE WILL PLAY FROM THE START BY LAUFEY WHEN IT OPENS (please email mhhan@mit.edu "haha" to let her know u get the pun)
+
 - **Recipe Bounties**: Users post requests for specific restaurant recipes with point rewards and time limits.
 
 - **Bounty Hunting**: Hunters claim bounties and submit recipes with a required Quest Log explaining how the recipe was obtained.
@@ -37,10 +39,6 @@ From the Source turns that curiosity into a game:
 - **Search & Filters**: Recipes can be searched and filtered by cuisine, location, difficulty, verification status, and bounty size.
 
 ---
-
-## Tech Stack
-
-TBD
 
 ## Credits
 
