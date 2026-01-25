@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Clock, MapPin, Award, ChefHat } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
+import { AddressInput } from '@/app/components/AddressInput';
 import { Badge } from '@/app/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
@@ -121,7 +122,15 @@ export function Home({ onNavigateToRestaurant, onNavigateToSubmit }: HomeProps) 
               post a bounty
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent 
+              className="max-w-md" 
+              onPointerDownOutside={(e) => {
+                const target = e.target as HTMLElement;
+                if (target.closest('.pac-container') || target.closest('.pac-item')) {
+                  e.preventDefault();
+                }
+              }}
+            >
             <DialogHeader>
               <DialogTitle className="lowercase">post a new bounty</DialogTitle>
               <DialogDescription className="lowercase">
@@ -149,11 +158,11 @@ export function Home({ onNavigateToRestaurant, onNavigateToSubmit }: HomeProps) 
               </div>
               <div>
                 <label className="lowercase block mb-2">location</label>
-                <Input 
-                  placeholder="city or address" 
+                <AddressInput
+                  placeholder="search for restaurant or address"
                   className="lowercase"
                   value={newBounty.location}
-                  onChange={(e) => setNewBounty({...newBounty, location: e.target.value})}
+                  onChange={(address) => setNewBounty({...newBounty, location: address})}
                 />
               </div>
               <div>
