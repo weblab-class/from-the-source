@@ -1,61 +1,17 @@
 import { useState } from 'react';
-import { useEffect } from 'react';
 import { Home } from '@/app/components/home';
 import { RestaurantPage } from '@/app/components/restaurant-page';
 import { RestaurantsPage } from '@/app/components/restaurants-page';
 import { Leaderboard } from '@/app/components/leaderboard';
 import { Profile } from '@/app/components/profile';
 import { SubmitRecipe } from '@/app/components/submit-recipe';
-import { GoogleLogin, googleLogout, CredentialResponse } from '@react-oauth/google';
+import { MusicWidget } from '@/app/components/music-widget';
 
 type Page = 'home' | 'restaurant' | 'restaurants' | 'leaderboard' | 'profile' | 'submit';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedRestaurant, setSelectedRestaurant] = useState<string | null>(null);
-
-  const [userId, setUserId] = useState<string | null>(null);
-
-  const handleLogin = (res: any) => {
-    console.log("Logged in to Google, now telling the server...");
-
-    fetch("http://localhost:5000/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ token: res.credential }), // Send the token here!
-    })
-      .then((response) => response.json())
-      .then((user) => {
-        console.log("Server verified user:", user);
-        setUserId(user._id); // This ID comes from YOUR MongoDB now!
-      })
-      .catch((err) => console.log("Login error:", err));
-  };
-
-  const handleLogout = () => {
-    googleLogout();
-    fetch("http://localhost:5000/api/logout", {
-      method: "POST",
-      credentials: "include" // ADD THIS HERE TOO
-    })
-      .then(() => {
-        setUserId(null);
-      });
-  };
-
-  useEffect(() => {
-  fetch("http://localhost:5000/api/whoami", {
-    credentials: "include", // THIS IS MANDATORY
-  })
-    .then((res) => res.json())
-    .then((user) => {
-      if (user._id) {
-        setUserId(user._id);
-      }
-    })
-    .catch((err) => console.log("Not logged in"));
-}, []);
 
   const navigateToRestaurant = (restaurantId: string) => {
     setSelectedRestaurant(restaurantId);
@@ -65,15 +21,17 @@ export default function App() {
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
-        return <Home onNavigateToRestaurant={navigateToRestaurant} onNavigateToSubmit={() => setCurrentPage('submit')} />;
+        return (
+          <Home
+            onNavigateToRestaurant={navigateToRestaurant}
+            onNavigateToSubmit={() => setCurrentPage('submit')}
+          />
+        );
       case 'restaurant':
         return (
           <RestaurantPage
             restaurantId={selectedRestaurant}
-            onBack={() => {
-              setCurrentPage('restaurants');
-              setSelectedRestaurant(null);
-            }}
+            onBack={() => setCurrentPage('restaurants')}
           />
         );
       case 'restaurants':
@@ -85,7 +43,12 @@ export default function App() {
       case 'submit':
         return <SubmitRecipe onBack={() => setCurrentPage('home')} />;
       default:
-        return <Home onNavigateToRestaurant={navigateToRestaurant} onNavigateToSubmit={() => setCurrentPage('submit')} />;
+        return (
+          <Home
+            onNavigateToRestaurant={navigateToRestaurant}
+            onNavigateToSubmit={() => setCurrentPage('submit')}
+          />
+        );
     }
   };
 
@@ -103,39 +66,40 @@ export default function App() {
             </button>
 
             <nav className="flex items-center gap-6">
-              <button onClick={() => setCurrentPage('home')} className="lowercase">bounties</button>
-              <button onClick={() => setCurrentPage('restaurants')} className="lowercase">restaurants</button>
-              <button onClick={() => setCurrentPage('leaderboard')} className="lowercase">leaderboard</button>
-
-              {/* ONLY show profile link if logged in */}
-              {userId && (
-                <button onClick={() => setCurrentPage('profile')} className="lowercase">profile</button>
-              )}
-
-              {/* AUTH SECTION */}
-              {userId ? (
-                <button
-                  onClick={handleLogout}
-                  className="bg-secondary text-secondary-foreground px-3 py-1 rounded lowercase"
-                >
-                  logout
-                </button>
-              ) : (
-                <GoogleLogin
-                  onSuccess={handleLogin}
-                  onError={() => console.log("Login Failed")}
-                  useOneTap
-                />
-              )}
+              <button
+                onClick={() => setCurrentPage('home')}
+                className="lowercase hover:opacity-80 transition-opacity"
+              >
+                bounties
+              </button>
+              <button
+                onClick={() => setCurrentPage('restaurants')}
+                className="lowercase hover:opacity-80 transition-opacity"
+              >
+                restaurants
+              </button>
+              <button
+                onClick={() => setCurrentPage('leaderboard')}
+                className="lowercase hover:opacity-80 transition-opacity"
+              >
+                leaderboard
+              </button>
+              <button
+                onClick={() => setCurrentPage('profile')}
+                className="lowercase hover:opacity-80 transition-opacity"
+              >
+                profile
+              </button>
             </nav>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main>
-        {renderPage()}
-      </main>
+      <main>{renderPage()}</main>
+
+      {/* Music widget on every page */}
+      <MusicWidget src="/fts.mp3" defaultOpen={true} />
     </div>
   );
 }
