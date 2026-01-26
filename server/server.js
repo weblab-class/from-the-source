@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const session = require('express-session');
 const { OAuth2Client } = require('google-auth-library');
+const path = require('path');
+const fs = require('fs');
 
 console.log("My DB Link is:", process.env.MONGODB_URI);
 
@@ -18,38 +20,42 @@ const User = require('./models/user');
 // Initialize express app
 const app = express();
 
-// Middleware
+// CORS
+const allowedOrigins = [
+  process.env.CLIENT_ORIGIN,            // e.g. https://your-frontend.onrender.com (optional)
+  'http://localhost:5173'              // local dev
+].filter(Boolean);
+
 app.use(cors({
-  origin: "http://localhost:5173",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true // This allows the "Login Session" to work
+  origin: (origin, cb) => {
+    // allow same-origin / curl / server-to-server
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
 }));
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:5173");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
 
-  // Handle the "preflight" request specifically
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
-app.use(express.json());                 // Parses JSON request bodies
+app.options('*', cors());
 
-// tells server to remems users using a secret key
+app.use(express.json());              
+
+// Behind Render/any proxy
+app.set('trust proxy', 1);
+
+// tells server to remember users using a secret key
 app.use(session({
-  secret: 'session-secret-stuff',
+  secret: process.env.SESSION_SECRET || 'session-secret-stuff',
   resave: false,
   saveUninitialized: false,
-  proxy: true, // Add this if you're using a proxy
+  proxy: true,
   cookie: {
-    secure: false,   // MUST be false for localhost
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    sameSite: 'lax', // This allows the cookie to be sent during development
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000,
+  },
 }));
 
 // auth logic
@@ -79,7 +85,6 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// NEW: Route to check "Who am I?" when the page refreshes
 app.get('/api/whoami', (req, res) => {
   if (req.session.user) {
     res.json(req.session.user);
@@ -107,9 +112,26 @@ app.use('/api/recipes', recipeRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 
 // Test route - visit http://localhost:5000/ to check if server is running
-app.get('/', (req, res) => {
-  res.json({ message: 'From the Source API is running!' });
-});
+app.get("/api", (req, res) => res.json({ message: "From the Source API is running!" }));
+
+// Serve built frontend (Vite)
+const distCandidates = [
+  path.join(__dirname, '../client/dist'),
+  path.join(__dirname, '../client/src/dist'),
+];
+
+const distPath = distCandidates.find((p) => fs.existsSync(path.join(p, 'index.html')));
+
+if (distPath) {
+  app.use(express.static(distPath));
+
+  // SPA fallback — keep this AFTER /api routes
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+} else {
+  console.warn('⚠️ No frontend dist folder found. Looked in:', distCandidates);
+}
 
 // Start server
 const PORT = process.env.PORT || 5001;
