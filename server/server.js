@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const session = require('express-session');
 const { OAuth2Client } = require('google-auth-library');
-const path = require('path');
+const path = require("path");
 const fs = require('fs');
 
 console.log("My DB Link is:", process.env.MONGODB_URI);
@@ -22,18 +22,16 @@ const app = express();
 
 // CORS
 const allowedOrigins = [
-  process.env.CLIENT_ORIGIN,            // e.g. https://your-frontend.onrender.com (optional)
-  'http://localhost:5173'              // local dev
-].filter(Boolean);
+  "http://localhost:5173",
+  "https://from-the-source.onrender.com",
+];
 
 app.use(cors({
-  origin: (origin, cb) => {
-    // allow same-origin / curl / server-to-server
-    if (!origin) return cb(null, true);
+  origin: function (origin, cb) {
+    if (!origin) return cb(null, true); // allow curl/postman
     if (allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error(`CORS blocked for origin: ${origin}`));
+    return cb(new Error("Not allowed by CORS"));
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
 }));
 
@@ -57,6 +55,22 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000,
   },
 }));
+
+app.use("/api/bounties", bountyRoutes);
+app.use("/api/recipes", recipeRoutes);
+app.use("/api/restaurants", restaurantRoutes);
+
+if (process.env.NODE_ENV === "production") {
+  // path from server/ -> client/src/dist
+  const distPath = path.join(__dirname, "..", "client", "src", "dist");
+
+  app.use(express.static(distPath));
+
+  // SPA fallback: serve index.html for any non-api route
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+}
 
 // auth logic
 app.post('/api/login', async (req, res) => {
