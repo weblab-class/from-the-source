@@ -5,10 +5,10 @@ import { Card } from "@/app/components/ui/card";
 import { Slider } from "@/app/components/ui/slider";
 
 type Track = {
-  src: string; // e.g. "/fts.mp3"
+  src: string; 
   title: string;
   artist: string;
-  coverSrc?: string; // e.g. "/fts.jpeg"
+  coverSrc?: string; 
 };
 
 type MusicWidgetProps = {
@@ -45,7 +45,6 @@ export function MusicWidget({
   const artist = track?.artist ?? "unknown";
   const coverSrc = track?.coverSrc;
 
-  // keep audio element synced with UI
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
@@ -53,7 +52,14 @@ export function MusicWidget({
     a.muted = muted;
   }, [volume, muted]);
 
-  // when src changes, reload; if already playing, keep playing
+  useEffect(() => {
+    return () => {
+      try {
+        audioRef.current?.pause();
+      } catch {}
+    };
+  }, []);
+
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
@@ -96,15 +102,13 @@ export function MusicWidget({
       return;
     }
 
-    // Play (must be triggered by user click)
+    // Play 
     try {
       setErrorMsg(null);
 
-      // Ensure element is configured before play
       a.volume = volume;
       a.muted = muted;
 
-      // Some browsers need this to re-evaluate the resource after hot reload
       if (a.readyState === 0) a.load();
 
       await a.play();
@@ -162,58 +166,53 @@ export function MusicWidget({
 
       <div className="fixed bottom-4 right-4 z-50">
         {open ? (
-          <Card className="w-[320px] p-4 shadow-lg overflow-hidden">
-            <div className="flex items-start justify-between gap-3">
+          <Card className="w-[320px] p-3 shadow-lg overflow-hidden bg-[#FFF1EE] border-[#FCC6BB]">
+            <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
                 {coverSrc ? (
                   <img
                     src={coverSrc}
                     alt={`${title} cover`}
-                    className="h-10 w-10 rounded-md object-cover border border-border shrink-0"
+                    className="h-12 w-12 rounded-md object-cover border border-[#FCC6BB] shrink-0"
                   />
                 ) : (
-                  <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center border border-border shrink-0">
+                  <div className="h-12 w-12 rounded-md bg-[#FCC6BB]/40 flex items-center justify-center border border-[#FCC6BB] shrink-0">
                     <Music2 className="w-4 h-4" />
                   </div>
                 )}
 
-                <div className="min-w-0">
-                  <div className="text-sm lowercase font-medium truncate">{title}</div>
-                  <div className="text-xs lowercase text-muted-foreground truncate">{artist}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-lg lowercase font-semibold text-[#5A1F14] truncate">{title}</div>
+                  <div className="text-base lowercase text-[#7A2D20] truncate">{artist}</div>
                 </div>
               </div>
 
               <button
                 onClick={() => setOpen(false)}
-                className="opacity-70 hover:opacity-100 transition-opacity"
+                className="opacity-80 hover:opacity-100 transition-opacity text-[#7A2D20]"
                 aria-label="close"
                 type="button"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-
-            <div className="mt-3 text-xs text-muted-foreground lowercase">
-              {status === "playing"
-                ? "playing on loop"
-                : status === "paused"
-                  ? "paused"
-                  : "tap play to start (browser requires click)"}
-            </div>
-
             {errorMsg && (
-              <div className="mt-2 text-xs lowercase text-destructive break-words">{errorMsg}</div>
+              <div className="mt-1 text-xs lowercase text-[#B42318] break-words">{errorMsg}</div>
             )}
 
-            <div className="mt-3 flex items-center gap-2 flex-nowrap">
-              <Button onClick={handlePlayPause} className="lowercase flex-1 min-w-0" type="button">
+            <div className="mt-2 flex items-center gap-2 flex-nowrap">
+              <Button
+                onClick={handlePlayPause}
+                className="lowercase flex-1 min-w-0 bg-[#F07A73] hover:bg-[#E86E67] text-white"
+                type="button"
+              >
                 {enabled ? "pause" : "play"}
               </Button>
 
               <Button
                 variant="outline"
                 onClick={nextTrack}
-                className="px-3 shrink-0"
+                className="px-3 shrink-0 border-[#FCC6BB] text-[#5A1F14] hover:bg-[#FCC6BB]/30"
                 type="button"
                 disabled={tracks.length <= 1}
                 aria-label="next track"
@@ -224,7 +223,7 @@ export function MusicWidget({
               <Button
                 variant="outline"
                 onClick={handleToggleMute}
-                className="w-10 px-0 shrink-0"
+                className="w-10 px-0 shrink-0 border-[#FCC6BB] text-[#5A1F14] hover:bg-[#FCC6BB]/30"
                 aria-label="mute"
                 type="button"
               >
@@ -232,14 +231,15 @@ export function MusicWidget({
               </Button>
             </div>
 
-            <div className="mt-3">
-              <div className="text-xs lowercase text-muted-foreground mb-2">volume</div>
+            <div className="mt-2">
+              <div className="text-xs lowercase text-[#7A2D20] mb-1">volume</div>
               <Slider
                 value={[volume]}
                 min={0}
                 max={1}
                 step={0.05}
                 onValueChange={(v) => setVolume(v[0] ?? 0.6)}
+                className="[&_.bg-primary]:bg-[#F07A73] [&_.bg-secondary]:bg-[#F4B3A8] [&_.border-primary]:border-[#F07A73] [&_.bg-background]:bg-[#F4B3A8]"
               />
             </div>
           </Card>
@@ -247,7 +247,7 @@ export function MusicWidget({
           <Button
             variant="outline"
             onClick={() => setOpen(true)}
-            className="lowercase shadow-md"
+            className="lowercase shadow-md border-[#FCC6BB] text-[#5A1F14] hover:bg-[#FCC6BB]/30"
             type="button"
           >
             <Music2 className="w-4 h-4 mr-2" />

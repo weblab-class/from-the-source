@@ -74,7 +74,7 @@ export function Home({ onNavigateToRestaurant, onNavigateToSubmit }: HomeProps) 
       await createBounty(newBounty);
       setNewBounty({ dishName: '', restaurant: '', location: '', category: '', description: '', pointReward: 500 });
       setDialogOpen(false);
-      fetchBounties(); // Refresh the list
+      fetchBounties(); 
     } catch (error) {
       console.error('Error posting bounty:', error);
     }

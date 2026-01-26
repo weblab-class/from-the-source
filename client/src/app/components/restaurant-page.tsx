@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/ta
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 
 interface RestaurantPageProps {
-  restaurantId: string | null; // can be ObjectId OR name
+  restaurantId: string | null; 
   onBack: () => void;
 }
 

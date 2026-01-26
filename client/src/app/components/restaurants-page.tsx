@@ -132,7 +132,7 @@ export function RestaurantsPage({ onNavigateToRestaurant }: RestaurantsPageProps
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((r) => {
-          const stableId = r._id ?? r.name; // your API currently returns _id:null, so use name
+          const stableId = r._id ?? r.name; 
           const imageUrl = encodeURIComponent(`${r.name} food`);
           const cracked = r.recipesUnlocked ?? 0;
           const active = r.activeBounties ?? 0;
