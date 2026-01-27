@@ -22,7 +22,7 @@ const bountySchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['mexican', 'italian', 'asian', 'american', 'vietnamese', 'japanese', 'middle eastern', 'deli', 'others'],
+    enum: ['mexican', 'italia', 'asian', 'american', 'vietnamese', 'japanese', 'middle eastern', 'deli', 'others'],
     default: 'other'
   },
 
@@ -41,7 +41,7 @@ const bountySchema = new mongoose.Schema({
 
   // Tracking who's involved
   postedBy: {
-    type: String,  
+    type: String,
     default: 'anonymous'
   },
   claimedBy: {
@@ -49,7 +49,7 @@ const bountySchema = new mongoose.Schema({
     default: null
   },
   wantedBy: [{
-    type: String  
+    type: String
   }],
 
   // Timestamps
