@@ -18,11 +18,15 @@ export default function App() {
 
   const GOOGLE_CLIENT_ID = "21919360500-851itvmeu0jn4010j0p68bt71m7a1ivc.apps.googleusercontent.com"
 
+  const API_BASE = window.location.origin.includes("localhost")
+    ? "http://localhost:5001"
+    : "https://from-the-source.onrender.com";
+
   useEffect(() => {
-    fetch("http://localhost:5001/api/whoami", { credentials: "include" })
+    fetch(`${API_BASE}/api/whoami`, { credentials: "include" })
       .then((res) => res.json())
       .then((user) => {
-        console.log("WhoAmI check returned:", user); // ADD THIS LINE
+        console.log("WhoAmI check returned:", user);
         if (user && user._id) {
           setUserId(user);
         } else {
@@ -33,7 +37,7 @@ export default function App() {
   }, []);
 
   const handleLogin = (response: any) => {
-    fetch("http://localhost:5001/api/login", {
+    fetch(`${API_BASE}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token: response.credential }),
@@ -47,7 +51,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    fetch("http://localhost:5001/api/logout", {
+    fetch(`${API_BASE}/api/login`, {
       method: "POST",
       credentials: "include",
     })
