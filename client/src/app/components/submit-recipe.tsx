@@ -69,8 +69,8 @@ export function SubmitRecipe({ onBack }: SubmitRecipeProps) {
           <CardContent className="space-y-4">
             <div>
               <label className="lowercase block mb-2">recipe name</label>
-              <Input 
-                placeholder="e.g., the green sauce from tacos el gordo" 
+              <Input
+                placeholder="e.g., the green sauce from tacos el gordo"
                 className="lowercase"
               />
             </div>
@@ -78,16 +78,16 @@ export function SubmitRecipe({ onBack }: SubmitRecipeProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="lowercase block mb-2">restaurant name</label>
-                <Input 
-                  placeholder="restaurant name" 
+                <Input
+                  placeholder="restaurant name"
                   className="lowercase"
                 />
               </div>
 
               <div>
                 <label className="lowercase block mb-2">location</label>
-                <Input 
-                  placeholder="city or address" 
+                <Input
+                  placeholder="city or address"
                   className="lowercase"
                 />
               </div>
@@ -101,7 +101,7 @@ export function SubmitRecipe({ onBack }: SubmitRecipeProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="mexican" className="lowercase">mexican</SelectItem>
-                  <SelectItem value="italian" className="lowercase">italian</SelectItem>
+                  <SelectItem value="italian" className="lowercase">italia</SelectItem>
                   <SelectItem value="asian" className="lowercase">asian</SelectItem>
                   <SelectItem value="american" className="lowercase">american</SelectItem>
                   <SelectItem value="vietnamese" className="lowercase">vietnamese</SelectItem>
@@ -144,7 +144,7 @@ export function SubmitRecipe({ onBack }: SubmitRecipeProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Textarea 
+            <Textarea
               placeholder="walked in during off hours (3pm). asked the guy at the counter super nicely. he said most people don't just ask. he wrote down the basics on a napkin. tested it 4 times to get the ratios right."
               className="min-h-[120px] lowercase"
             />
@@ -165,7 +165,7 @@ export function SubmitRecipe({ onBack }: SubmitRecipeProps) {
           <CardContent className="space-y-3">
             {ingredients.map((ingredient, index) => (
               <div key={index} className="flex gap-2">
-                <Input 
+                <Input
                   value={ingredient}
                   onChange={(e) => updateIngredient(index, e.target.value)}
                   placeholder="e.g., 1 cup mayo"
@@ -208,7 +208,7 @@ export function SubmitRecipe({ onBack }: SubmitRecipeProps) {
                 <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm mt-1">
                   {index + 1}
                 </div>
-                <Textarea 
+                <Textarea
                   value={instruction}
                   onChange={(e) => updateInstruction(index, e.target.value)}
                   placeholder="describe this step..."
