@@ -16,14 +16,16 @@ export default function App() {
   const [userId, setUserId] = useState<any>(null);
   (window as any).myUser = userId;
 
-  const GOOGLE_CLIENT_ID = "21919360500-851itvmeu0jn4010j0p68bt71m7a1ivc.apps.googleusercontent.com"
+  const GOOGLE_CLIENT_ID = "21919360500-851itvmeu0jn4010j0p68bt71m7a1ivc.apps.googleusercontent.com";
 
-  const API_BASE = window.location.origin.includes("localhost")
-    ? "http://localhost:5001"
-    : "https://from-the-source.onrender.com";
+  // In dev, hit the local API server; on Render/prod, hit the same origin as the deployed site.
+  // If you set VITE_API_BASE, set it to the ORIGIN only (e.g. "http://localhost:5001"), not ".../api".
+  const API_ORIGIN =
+    import.meta.env.VITE_API_BASE ??
+    (import.meta.env.DEV ? "http://localhost:5001" : window.location.origin);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/whoami`, { credentials: "include" })
+    fetch(`${API_ORIGIN}/api/whoami`, { credentials: "include" })
       .then((res) => res.json())
       .then((user) => {
         console.log("WhoAmI check returned:", user);
@@ -37,7 +39,7 @@ export default function App() {
   }, []);
 
   const handleLogin = (response: any) => {
-    fetch(`${API_BASE}/api/login`, {
+    fetch(`${API_ORIGIN}/api/whoami`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token: response.credential }),
@@ -51,7 +53,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    fetch(`${API_BASE}/api/login`, {
+    fetch(`${API_ORIGIN}/api/logout`, {
       method: "POST",
       credentials: "include",
     })

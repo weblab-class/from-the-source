@@ -1,8 +1,12 @@
-const API_URL = 'http://localhost:5001/api';
+
+const API_URL = import.meta.env.VITE_API_BASE ?? '/api';
 
 // Bounties
 export async function getBounties() {
-  const res = await fetch(`${API_URL}/bounties`);
+  const res = await fetch(`${API_URL}/bounties`, {
+    headers: { Accept: 'application/json' },
+    credentials: 'include',
+  });
   return res.json();
 }
 
@@ -17,7 +21,8 @@ export async function createBounty(bounty: {
 }) {
   const res = await fetch(`${API_URL}/bounties`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    credentials: 'include',
     body: JSON.stringify(bounty),
   });
   return res.json();
@@ -25,12 +30,18 @@ export async function createBounty(bounty: {
 
 // Recipes
 export async function getRecipes() {
-  const res = await fetch(`${API_URL}/recipes`);
+  const res = await fetch(`${API_URL}/recipes`, {
+    headers: { Accept: 'application/json' },
+    credentials: 'include',
+  });
   return res.json();
 }
 
 // Restaurants
 export async function getRestaurants() {
-  const res = await fetch(`${API_URL}/restaurants`);
+  const res = await fetch(`${API_URL}/restaurants`, {
+    headers: { Accept: 'application/json' },
+    credentials: 'include',
+  });
   return res.json();
 }
