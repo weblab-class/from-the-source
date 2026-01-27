@@ -58,7 +58,6 @@ export function SubmitRecipe({ onBack }: SubmitRecipeProps) {
       </div>
 
       <div className="space-y-6">
-        {/* Basic Info */}
         <Card>
           <CardHeader>
             <CardTitle className="lowercase">basic information</CardTitle>
@@ -101,7 +100,7 @@ export function SubmitRecipe({ onBack }: SubmitRecipeProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="mexican" className="lowercase">mexican</SelectItem>
-                  <SelectItem value="italian" className="lowercase">italia</SelectItem>
+                  <SelectItem value="italian" className="lowercase">italian</SelectItem>
                   <SelectItem value="asian" className="lowercase">asian</SelectItem>
                   <SelectItem value="american" className="lowercase">american</SelectItem>
                   <SelectItem value="vietnamese" className="lowercase">vietnamese</SelectItem>
@@ -135,7 +134,7 @@ export function SubmitRecipe({ onBack }: SubmitRecipeProps) {
           </CardContent>
         </Card>
 
-        {/* Quest Log */}
+        {/* quest log */}
         <Card>
           <CardHeader>
             <CardTitle className="lowercase">quest log (required)</CardTitle>
@@ -154,7 +153,7 @@ export function SubmitRecipe({ onBack }: SubmitRecipeProps) {
           </CardContent>
         </Card>
 
-        {/* Ingredients */}
+        {/* ingredients */}
         <Card>
           <CardHeader>
             <CardTitle className="lowercase">ingredients</CardTitle>
@@ -194,7 +193,7 @@ export function SubmitRecipe({ onBack }: SubmitRecipeProps) {
           </CardContent>
         </Card>
 
-        {/* Instructions */}
+        {/* instructions */}
         <Card>
           <CardHeader>
             <CardTitle className="lowercase">instructions</CardTitle>
@@ -237,7 +236,7 @@ export function SubmitRecipe({ onBack }: SubmitRecipeProps) {
           </CardContent>
         </Card>
 
-        {/* Submit */}
+        {/* submit */}
         <Card className="bg-muted">
           <CardContent className="pt-6">
             <div className="space-y-4">
