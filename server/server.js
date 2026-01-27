@@ -43,20 +43,11 @@ app.use(session({
   saveUninitialized: false,
   proxy: true,
   cookie: {
-    secure: true,
-    sameSite: 'none',
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000,
   },
 }));
-
-if (process.env.NODE_ENV === "production") {
-  const distPath = path.join(__dirname, "..", "client", "src", "dist");
-
-  app.use(express.static(distPath));
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(distPath, "index.html"));
-  });
-}
 
 // auth logic
 app.post('/api/login', async (req, res) => {
@@ -97,6 +88,15 @@ app.post('/api/logout', (req, res) => {
   req.session.destroy();
   res.send({});
 });
+
+if (process.env.NODE_ENV === "production") {
+  const distPath = path.join(__dirname, "..", "client", "src", "dist");
+
+  app.use(express.static(distPath));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+}
 
 const atlasURI = "mongodb+srv://mhhan_db_user:abcd@fromthesource.idrfeoz.mongodb.net/fromthesource?retryWrites=true&w=majority";
 mongoose.connect(atlasURI)

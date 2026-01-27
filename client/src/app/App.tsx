@@ -18,8 +18,6 @@ export default function App() {
 
   const GOOGLE_CLIENT_ID = "21919360500-851itvmeu0jn4010j0p68bt71m7a1ivc.apps.googleusercontent.com";
 
-  // In dev, hit the local API server; on Render/prod, hit the same origin as the deployed site.
-  // If you set VITE_API_BASE, set it to the ORIGIN only (e.g. "http://localhost:5001"), not ".../api".
   const API_ORIGIN =
     import.meta.env.VITE_API_BASE ??
     (import.meta.env.DEV ? "http://localhost:5001" : window.location.origin);
@@ -39,7 +37,7 @@ export default function App() {
   }, []);
 
   const handleLogin = (response: any) => {
-    fetch(`${API_ORIGIN}/api/whoami`, {
+    fetch(`${API_ORIGIN}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token: response.credential }),
@@ -86,6 +84,19 @@ export default function App() {
       case 'leaderboard':
         return <Leaderboard onBack={() => setCurrentPage('home')} />;
       case 'profile':
+        if (!userId) {
+          return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+              <p className="lowercase text-xl">please login to access your acct info</p>
+              <button
+                onClick={() => setCurrentPage('home')}
+                className="border border-foreground px-4 py-1 lowercase"
+              >
+                back to home
+              </button>
+            </div>
+          );
+        }
         return <Profile userId={userId} onBack={() => setCurrentPage('home')} />;
       case 'submit':
         return <SubmitRecipe onBack={() => setCurrentPage('home')} />;
