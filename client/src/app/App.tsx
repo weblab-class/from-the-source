@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { Home } from '@/app/components/home';
 import { RestaurantPage } from '@/app/components/restaurant-page';
 import { RestaurantsPage } from '@/app/components/restaurants-page';
@@ -12,6 +13,46 @@ type Page = 'home' | 'restaurant' | 'restaurants' | 'leaderboard' | 'profile' | 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedRestaurant, setSelectedRestaurant] = useState<string | null>(null);
+  const [userId, setUserId] = useState<any>(null);
+  (window as any).myUser = userId;
+
+  const GOOGLE_CLIENT_ID = "21919360500-851itvmeu0jn4010j0p68bt71m7a1ivc.apps.googleusercontent.com"
+
+  useEffect(() => {
+    fetch("http://localhost:5001/api/whoami", { credentials: "include" })
+      .then((res) => res.json())
+      .then((user) => {
+        console.log("WhoAmI check returned:", user); // ADD THIS LINE
+        if (user && user._id) {
+          setUserId(user);
+        } else {
+          setUserId(null);
+        }
+      })
+      .catch(err => console.error("WhoAmI fetch failed:", err));
+  }, []);
+
+  const handleLogin = (response: any) => {
+    fetch("http://localhost:5001/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: response.credential }),
+      credentials: "include", // <--- ADD THIS
+    })
+      .then((res) => res.json())
+      .then((user) => {
+        console.log("Logged in user:", user);
+        setUserId(user);
+      });
+  };
+
+  const handleLogout = () => {
+    fetch("http://localhost:5001/api/logout", {
+      method: "POST",
+      credentials: "include",
+    })
+      .then(() => setUserId(null));
+  };
 
   const navigateToRestaurant = (restaurantId: string) => {
     setSelectedRestaurant(restaurantId);
@@ -39,7 +80,7 @@ export default function App() {
       case 'leaderboard':
         return <Leaderboard onBack={() => setCurrentPage('home')} />;
       case 'profile':
-        return <Profile onBack={() => setCurrentPage('home')} />;
+        return <Profile userId={userId} onBack={() => setCurrentPage('home')} />;
       case 'submit':
         return <SubmitRecipe onBack={() => setCurrentPage('home')} />;
       default:
@@ -54,7 +95,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="bg-primary text-primary-foreground border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -90,16 +130,22 @@ export default function App() {
               >
                 profile
               </button>
+
+              <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+                {userId && userId._id ? (
+                  <button onClick={handleLogout} className="lowercase">logout</button>
+                ) : (
+                  <GoogleLogin onSuccess={handleLogin} />
+                )}
+              </GoogleOAuthProvider>
             </nav>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <main>{renderPage()}</main>
-
-      {/* Music widget on every page */}
       <MusicWidget src="/fts.mp3" defaultOpen={true} />
+
     </div>
   );
 }

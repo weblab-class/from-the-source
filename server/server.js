@@ -9,7 +9,6 @@ const fs = require('fs');
 
 console.log("My DB Link is:", process.env.MONGODB_URI);
 
-// Import routes
 const bountyRoutes = require('./routes/bounties');
 const recipeRoutes = require('./routes/recipes');
 const restaurantRoutes = require('./routes/restaurants');
@@ -17,56 +16,44 @@ const restaurantRoutes = require('./routes/restaurants');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const User = require('./models/user');
 
-// Initialize express app
 const app = express();
 
-// CORS
 const allowedOrigins = [
   "http://localhost:5173",
   "https://from-the-source.onrender.com",
 ];
 
 app.use(cors({
-  origin: function (origin, cb) {
-    if (!origin) return cb(null, true); // allow curl/postman
-    if (allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error("Not allowed by CORS"));
-  },
+  origin: "http://localhost:5173",
   credentials: true,
 }));
 
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  next();
+});
+
 app.options('*', cors());
-
-app.use(express.json());              
-
-// Behind Render/any proxy
+app.use(express.json());
 app.set('trust proxy', 1);
 
-// tells server to remember users using a secret key
 app.use(session({
   secret: process.env.SESSION_SECRET || 'session-secret-stuff',
   resave: false,
   saveUninitialized: false,
   proxy: true,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false,
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000,
   },
 }));
 
-app.use("/api/bounties", bountyRoutes);
-app.use("/api/recipes", recipeRoutes);
-app.use("/api/restaurants", restaurantRoutes);
-
 if (process.env.NODE_ENV === "production") {
-  // path from server/ -> client/src/dist
   const distPath = path.join(__dirname, "..", "client", "src", "dist");
 
   app.use(express.static(distPath));
-
-  // SPA fallback: serve index.html for any non-api route
   app.get("*", (req, res) => {
     res.sendFile(path.join(distPath, "index.html"));
   });
@@ -80,7 +67,7 @@ app.post('/api/login', async (req, res) => {
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
-    const payload = ticket.getPayload(); // This is the user's Google info!
+    const payload = ticket.getPayload();
 
     // check if user exists, if not, create them
     let user = await User.findOne({ googleid: payload.sub });
@@ -92,7 +79,7 @@ app.post('/api/login', async (req, res) => {
       await user.save();
     }
 
-    req.session.user = user; // This logs them in!
+    req.session.user = user;
     res.json(user);
   } catch (error) {
     res.status(401).json({ message: "Login failed" });
@@ -112,23 +99,18 @@ app.post('/api/logout', (req, res) => {
   res.send({});
 });
 
-
-// 1. Manually define the connection string here
 const atlasURI = "mongodb+srv://mhhan_db_user:abcd@fromthesource.idrfeoz.mongodb.net/fromthesource?retryWrites=true&w=majority";
-
-// 2. Connect using that manual string
 mongoose.connect(atlasURI)
-  .then(() => console.log('✅ Connected to MongoDB'))
-  .catch((err) => console.error('❌ MongoDB connection error:', err));
-// Routes
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('MongoDB connection error:', err));
+
+// routes
 app.use('/api/bounties', bountyRoutes);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 
-// Test route - visit http://localhost:5000/ to check if server is running
 app.get("/api", (req, res) => res.json({ message: "From the Source API is running!" }));
 
-// Serve built frontend (Vite)
 const distCandidates = [
   path.join(__dirname, '../client/dist'),
   path.join(__dirname, '../client/src/dist'),
@@ -139,16 +121,14 @@ const distPath = distCandidates.find((p) => fs.existsSync(path.join(p, 'index.ht
 if (distPath) {
   app.use(express.static(distPath));
 
-  // SPA fallback — keep this AFTER /api routes
   app.get('*', (req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
   });
 } else {
-  console.warn('⚠️ No frontend dist folder found. Looked in:', distCandidates);
+  console.warn('No frontend dist folder found. Looked in:', distCandidates);
 }
 
-// Start server
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
