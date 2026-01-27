@@ -2,7 +2,6 @@
 @import './tailwind.css';
 @import './theme.css';
 
-/* Google Places Autocomplete Styling */
 .pac-container {
   background-color: #FAF7F2 !important;
   border: 1px solid #E5E0D8 !important;

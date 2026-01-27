@@ -3,13 +3,11 @@ const router = express.Router();
 const Bounty = require('../models/Bounty');
 const Restaurant = require('../models/Restaurant');
 
-// GET /api/bounties - Get all bounties
+// GET /api/bounties - get all bounties
 router.get('/', async (req, res) => {
   try {
-    // Optional query params for filtering
     const { status, category, cuisine } = req.query;
-    
-    // Build filter object
+
     let filter = {};
     if (status) filter.status = status;
     if (category) filter.category = category;
@@ -21,7 +19,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/bounties/:id - Get single bounty
+// GET /api/bounties/:id - get single bounty
 router.get('/:id', async (req, res) => {
   try {
     const bounty = await Bounty.findById(req.params.id);
@@ -34,22 +32,17 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/bounties - Create new bounty
+// POST /api/bounties - create new bounty
 router.post('/', async (req, res) => {
   try {
     const { dishName, restaurant, location, description, category, pointReward, postedBy, cuisine } = req.body;
-
-    // Normalize restaurant name so we can reliably match between bounties and restaurants
     const normalizedRestaurantName = (restaurant || '').trim();
 
-    // If we have a restaurant name, ensure there is a Restaurant document for it.
-    // This is what allows /api/restaurants to return cuisine/location instead of null.
     if (normalizedRestaurantName) {
       await Restaurant.findOneAndUpdate(
         { name: normalizedRestaurantName },
         {
           $setOnInsert: { name: normalizedRestaurantName },
-          // Only set fields if they were provided (avoid overwriting existing data with empty values)
           $set: {
             ...(location ? { location } : {}),
             ...(cuisine ? { cuisine } : {}),
@@ -61,7 +54,6 @@ router.post('/', async (req, res) => {
 
     const newBounty = new Bounty({
       dishName,
-      // Store the normalized name so it matches Restaurant.name exactly
       restaurant: normalizedRestaurantName,
       location,
       description,
@@ -78,7 +70,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/bounties/:id/claim - Claim a bounty
+// PUT /api/bounties/:id/claim - claim a bounty
 router.put('/:id/claim', async (req, res) => {
   try {
     const { username } = req.body;
@@ -102,7 +94,7 @@ router.put('/:id/claim', async (req, res) => {
   }
 });
 
-// PUT /api/bounties/:id/want - Add yourself to "want this" list
+// PUT /api/bounties/:id/want - add yourself to "want this" list
 router.put('/:id/want', async (req, res) => {
   try {
     const { username } = req.body;
@@ -112,7 +104,6 @@ router.put('/:id/want', async (req, res) => {
       return res.status(404).json({ message: 'Bounty not found' });
     }
 
-    // Check if user already wants this
     if (bounty.wantedBy.includes(username)) {
       return res.status(400).json({ message: 'You already want this bounty' });
     }
@@ -125,7 +116,7 @@ router.put('/:id/want', async (req, res) => {
   }
 });
 
-// DELETE /api/bounties/:id - Delete a bounty (for testing)
+// DELETE /api/bounties/:id - delete a bounty
 router.delete('/:id', async (req, res) => {
   try {
     const bounty = await Bounty.findByIdAndDelete(req.params.id);

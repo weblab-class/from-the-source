@@ -3,7 +3,7 @@ const router = express.Router();
 const Recipe = require('../models/Recipe');
 const Bounty = require('../models/Bounty');
 
-// GET /api/recipes - Get all recipes
+// GET /api/recipes - get all recipes
 router.get('/', async (req, res) => {
   try {
     const recipes = await Recipe.find().sort({ createdAt: -1 });
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/recipes/:id - Get single recipe
+// GET /api/recipes/:id - get single recipe
 router.get('/:id', async (req, res) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
@@ -26,21 +26,21 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/recipes - Submit a new recipe
+// POST /api/recipes - submit a new recipe
 router.post('/', async (req, res) => {
   try {
-    const { 
-      bountyId, 
-      dishName, 
-      restaurant, 
-      ingredients, 
-      steps, 
-      questLog, 
-      difficultyTag, 
-      submittedBy 
+    const {
+      bountyId,
+      dishName,
+      restaurant,
+      ingredients,
+      steps,
+      questLog,
+      difficultyTag,
+      submittedBy
     } = req.body;
 
-    // Create the recipe
+    // create the recipe
     const newRecipe = new Recipe({
       bountyId,
       dishName,
@@ -54,7 +54,7 @@ router.post('/', async (req, res) => {
 
     const savedRecipe = await newRecipe.save();
 
-    // Update the bounty status to completed
+    // update the bounty status: completed
     if (bountyId) {
       await Bounty.findByIdAndUpdate(bountyId, { status: 'completed' });
     }
@@ -65,7 +65,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// POST /api/recipes/:id/verify - Add a verification to a recipe
+// POST /api/recipes/:id/verify - add a verification to a recipe
 router.post('/:id/verify', async (req, res) => {
   try {
     const { verifiedBy, method, accuracyRating, notes } = req.body;
@@ -75,7 +75,6 @@ router.post('/:id/verify', async (req, res) => {
       return res.status(404).json({ message: 'Recipe not found' });
     }
 
-    // Add verification
     recipe.verifications.push({
       verifiedBy,
       method,
@@ -90,7 +89,7 @@ router.post('/:id/verify', async (req, res) => {
   }
 });
 
-// GET /api/recipes/bounty/:bountyId - Get recipe for a specific bounty
+// GET /api/recipes/bounty/:bountyId - get recipe for a specific bounty
 router.get('/bounty/:bountyId', async (req, res) => {
   try {
     const recipe = await Recipe.findOne({ bountyId: req.params.bountyId });

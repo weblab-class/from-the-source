@@ -37,7 +37,7 @@ export default function App() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token: response.credential }),
-      credentials: "include", // <--- ADD THIS
+      credentials: "include",
     })
       .then((res) => res.json())
       .then((user) => {

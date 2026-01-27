@@ -34,4 +34,3 @@ export async function getRestaurants() {
   const res = await fetch(`${API_URL}/restaurants`);
   return res.json();
 }
-
