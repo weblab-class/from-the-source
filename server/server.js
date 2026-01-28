@@ -89,43 +89,26 @@ app.post('/api/logout', (req, res) => {
   res.send({});
 });
 
-if (process.env.NODE_ENV === "production") {
-  const distPath = path.join(__dirname, "..", "client", "src", "dist");
-
-  app.use(express.static(distPath));
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(distPath, "index.html"));
-  });
-}
+// routes
+app.use('/api/bounties', bountyRoutes);
+app.use('/api/recipes', recipeRoutes);
+app.use('/api/restaurants', restaurantRoutes);
+app.get("/api", (req, res) => res.json({ message: "From the Source API is running!" }));
 
 const atlasURI = "mongodb+srv://mhhan_db_user:abcd@fromthesource.idrfeoz.mongodb.net/fromthesource?retryWrites=true&w=majority";
 mongoose.connect(atlasURI)
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
-// routes
-app.use('/api/bounties', bountyRoutes);
-app.use('/api/recipes', recipeRoutes);
-app.use('/api/restaurants', restaurantRoutes);
-
-app.get("/api", (req, res) => res.json({ message: "From the Source API is running!" }));
-
-const distCandidates = [
-  path.join(__dirname, '../client/dist'),
-  path.join(__dirname, '../client/src/dist'),
-];
-
-const distPath = distCandidates.find((p) => fs.existsSync(path.join(p, 'index.html')));
-
-if (distPath) {
-  app.use(express.static(distPath));
-
-  app.get('*', (req, res) => {
+const distPath = path.join(__dirname, '../client/dist');
+app.use(express.static(distPath));
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api')) {
+    res.status(404).json({ error: "API route not found" });
+  } else {
     res.sendFile(path.join(distPath, 'index.html'));
-  });
-} else {
-  console.warn('No frontend dist folder found. Looked in:', distCandidates);
-}
+  }
+});
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
