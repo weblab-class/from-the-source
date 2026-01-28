@@ -1,18 +1,43 @@
+import { useState } from 'react';
 import { ArrowLeft, Award, Target, CheckCircle, Flame, TrendingUp, User } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
 import { Progress } from '@/app/components/ui/progress';
-import { mockUserProfile } from '@/app/data/mock-data';
 
 interface ProfileProps {
+  userId: any;
   onBack: () => void;
 }
 
-export function Profile({ onBack }: ProfileProps) {
-  const profile = mockUserProfile;
+export function Profile({ userId, onBack }: ProfileProps) {
+  const API_ORIGIN = window.location.origin.includes("localhost")
+    ? "http://localhost:5001"
+    : window.location.origin;
+
+  const profile = userId || {};
+  const [newName, setNewName] = useState(profile.name || "");
+
+  const points = profile.points || 0;
+  const username = profile.name || "anonymous chef";
+  const streak = profile.streak || 0;
+  const joinedDate = profile.joinedDate || new Date();
+
   const nextLevelPoints = 15000;
-  const progressToNextLevel = (profile.points / nextLevelPoints) * 100;
+  const progressToNextLevel = (points / nextLevelPoints) * 100;
+
+  const handleUpdateName = () => {
+    fetch(`${API_ORIGIN}/api/user/update`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newName }),
+      credentials: "include"
+    })
+    .then(res => res.json())
+    .then(updatedUser => {
+       alert("name updated!");
+    });
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -28,24 +53,32 @@ export function Profile({ onBack }: ProfileProps) {
             <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center">
               <User className="w-12 h-12 text-primary-foreground" />
             </div>
-            
+
             <div className="flex-1 text-center md:text-left">
-              <h1 className="lowercase tracking-wide mb-2">{profile.username}</h1>
+              <div className="flex items-center gap-4 mb-2">
+                <input
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="bg-transparent border-b border-foreground lowercase text-xl focus:outline-none"
+                />
+                <Button onClick={handleUpdateName} size="sm" className="h-6 lowercase text-xs">save name</Button>
+              </div>
+
               <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-4">
                 <Badge variant="secondary" className="lowercase">
                   <Flame className="w-3 h-3 mr-1" />
-                  {profile.streak} day streak
+                  {streak} day streak
                 </Badge>
                 <Badge variant="outline" className="lowercase">
-                  joined {new Date(profile.joinedDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  joined {new Date(joinedDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                 </Badge>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="lowercase text-muted-foreground">level progress</span>
                   <span className="lowercase font-semibold">
-                    {profile.points.toLocaleString()} / {nextLevelPoints.toLocaleString()} points
+                    {points.toLocaleString()} / {nextLevelPoints.toLocaleString()} points
                   </span>
                 </div>
                 <Progress value={progressToNextLevel} className="h-2" />
@@ -54,7 +87,7 @@ export function Profile({ onBack }: ProfileProps) {
 
             <div className="text-center">
               <div className="text-4xl font-semibold text-primary mb-1">
-                {profile.points.toLocaleString()}
+                {points.toLocaleString()}
               </div>
               <div className="text-sm text-muted-foreground lowercase">total points</div>
             </div>
@@ -72,7 +105,7 @@ export function Profile({ onBack }: ProfileProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold text-blue-600">{profile.bountiesPosted}</div>
+            <div className="text-3xl font-semibold text-blue-600">{profile.bountiesPosted || 0}</div>
           </CardContent>
         </Card>
 
@@ -84,7 +117,7 @@ export function Profile({ onBack }: ProfileProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold text-green-600">{profile.bountiesClaimed}</div>
+            <div className="text-3xl font-semibold text-green-600">{profile.bountiesClaimed || 0}</div>
           </CardContent>
         </Card>
 
@@ -96,7 +129,7 @@ export function Profile({ onBack }: ProfileProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold text-amber-600">{profile.recipesSubmitted}</div>
+            <div className="text-3xl font-semibold text-amber-600">{profile.recipesSubmitted || 0}</div>
           </CardContent>
         </Card>
 
@@ -108,61 +141,10 @@ export function Profile({ onBack }: ProfileProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold text-purple-600">{profile.verificationsCompleted}</div>
+            <div className="text-3xl font-semibold text-purple-600">{profile.verificationsCompleted || 0}</div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Achievements */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="lowercase">achievements</CardTitle>
-          <CardDescription className="lowercase">badges earned for your contributions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                <Trophy className="w-6 h-6 text-yellow-600" />
-              </div>
-              <div>
-                <p className="font-semibold lowercase">top hunter</p>
-                <p className="text-sm text-muted-foreground lowercase">ranked #1 this month</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                <Flame className="w-6 h-6 text-red-600" />
-              </div>
-              <div>
-                <p className="font-semibold lowercase">on fire</p>
-                <p className="text-sm text-muted-foreground lowercase">12 day login streak</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <p className="font-semibold lowercase">master verifier</p>
-                <p className="text-sm text-muted-foreground lowercase">45+ verifications</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                <Award className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="font-semibold lowercase">recipe expert</p>
-                <p className="text-sm text-muted-foreground lowercase">15+ recipes submitted</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Recent Activity */}
       <Card>
@@ -172,38 +154,8 @@ export function Profile({ onBack }: ProfileProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-start gap-3 pb-4 border-b">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <Award className="w-4 h-4 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="lowercase font-medium">submitted recipe for "pink sauce"</p>
-                <p className="text-sm text-muted-foreground lowercase">from the halal guys · earned 800 points</p>
-                <p className="text-xs text-muted-foreground lowercase mt-1">8 days ago</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 pb-4 border-b">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <Target className="w-4 h-4 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="lowercase font-medium">posted bounty</p>
-                <p className="text-sm text-muted-foreground lowercase">"chipotle mayo from burgerville" · 500 points</p>
-                <p className="text-xs text-muted-foreground lowercase mt-1">10 days ago</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <CheckCircle className="w-4 h-4 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <p className="lowercase font-medium">verified recipe</p>
-                <p className="text-sm text-muted-foreground lowercase">"garlic noodles from thanh long" · rated 9.5/10</p>
-                <p className="text-xs text-muted-foreground lowercase mt-1">12 days ago</p>
-              </div>
-            </div>
+            {/* If you have real activity in your DB, you would map it here */}
+            <p className="text-sm text-muted-foreground italic lowercase">no recent activity to show yet.</p>
           </div>
         </CardContent>
       </Card>

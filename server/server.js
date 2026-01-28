@@ -89,6 +89,19 @@ app.post('/api/logout', (req, res) => {
   res.send({});
 });
 
+app.post('/api/user/update', async (req, res) => {
+  if (!req.session.user) return res.status(401).send("Not logged in");
+
+  const updatedUser = await User.findByIdAndUpdate(
+    req.session.user._id,
+    { name: req.body.name },
+    { new: true }
+  );
+
+  req.session.user = updatedUser;
+  res.json(updatedUser);
+});
+
 // routes
 app.use('/api/bounties', bountyRoutes);
 app.use('/api/recipes', recipeRoutes);
