@@ -90,16 +90,25 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.post('/api/user/update', async (req, res) => {
-  if (!req.session.user) return res.status(401).send("Not logged in");
+  if (!req.session.user) {
+    return res.status(401).json({ message: "not logged in" });
+  }
 
-  const updatedUser = await User.findByIdAndUpdate(
-    req.session.user._id,
-    { name: req.body.name },
-    { new: true }
-  );
+  try {
+    const { name, picture } = req.body;
+    const updatedUser = await User.findByIdAndUpdate(
+      req.session.user._id,
+      { name, picture },
+      { new: true }
+    );
 
-  req.session.user = updatedUser;
-  res.json(updatedUser);
+    req.session.user = updatedUser;
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error("Update failed:", error);
+    res.status(500).json({ message: "failed to update profile" });
+  }
 });
 
 // routes
@@ -114,14 +123,19 @@ mongoose.connect(atlasURI)
   .catch((err) => console.error('MongoDB connection error:', err));
 
 const distPath = path.join(__dirname, '../client/dist');
-app.use(express.static(distPath));
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api')) {
-    res.status(404).json({ error: "API route not found" });
-  } else {
-    res.sendFile(path.join(distPath, 'index.html'));
-  }
-});
+
+if (fs.existsSync(path.join(distPath, 'index.html'))) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api')) {
+      res.status(404).json({ message: "API route not found" });
+    } else {
+      res.sendFile(path.join(distPath, 'index.html'));
+    }
+  });
+} else {
+  console.log("Dist folder not found at:", distPath);
+}
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {

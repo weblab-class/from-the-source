@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Award, Target, CheckCircle, Flame, TrendingUp, User } from 'lucide-react';
+import { ArrowLeft, Award, Target, CheckCircle, Flame, TrendingUp, User, Edit2 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
@@ -11,57 +11,90 @@ interface ProfileProps {
 }
 
 export function Profile({ userId, onBack }: ProfileProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentProfile, setCurrentProfile] = useState(userId);
+  const [newName, setNewName] = useState(userId?.name || "");
+  const [newPic, setNewPic] = useState(userId?.picture || "");
+
   const API_ORIGIN = window.location.origin.includes("localhost")
     ? "http://localhost:5001"
     : window.location.origin;
 
-  const profile = userId || {};
-  const [newName, setNewName] = useState(profile.name || "");
-
-  const points = profile.points || 0;
-  const username = profile.name || "anonymous chef";
-  const streak = profile.streak || 0;
-  const joinedDate = profile.joinedDate || new Date();
-
+  const points = currentProfile?.points || 0;
+  const streak = currentProfile?.streak || 0;
+  const joinedDate = currentProfile?.joinedDate || new Date();
   const nextLevelPoints = 15000;
   const progressToNextLevel = (points / nextLevelPoints) * 100;
 
-  const handleUpdateName = () => {
-    fetch(`${API_ORIGIN}/api/user/update`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newName }),
-      credentials: "include"
-    })
-    .then(res => res.json())
-    .then(updatedUser => {
-       alert("name updated!");
-    });
-  };
+  const handleSave = async () => {
+  const res = await fetch(`${API_ORIGIN}/api/user/update`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: newName, picture: newPic }),
+    credentials: "include"
+  });
+
+  if (res.ok) {
+    const updated = await res.json();
+    setCurrentProfile(updated); // This updates the name on screen!
+    setIsEditing(false);
+    alert("profile saved!");
+  } else {
+    alert("save failed - check server logs");
+  }
+};
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <Button onClick={onBack} variant="ghost" className="lowercase mb-6 gap-2">
-        <ArrowLeft className="w-4 h-4" />
-        back to bounties
-      </Button>
+      <div className="flex justify-between items-center mb-6">
+        <Button onClick={onBack} variant="ghost" className="lowercase gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          back to bounties
+        </Button>
+
+        {/* EDIT TOGGLE BUTTON */}
+        <Button
+          onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+          variant={isEditing ? "default" : "outline"}
+          className="lowercase gap-2"
+        >
+          {isEditing ? "save changes" : <><Edit2 className="w-4 h-4" /> edit profile</>}
+        </Button>
+      </div>
 
       {/* Profile Header */}
       <Card className="mb-8">
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-            <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center">
-              <User className="w-12 h-12 text-primary-foreground" />
+            <div className="relative">
+              <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center overflow-hidden border-2 border-primary">
+                {newPic ? (
+                  <img src={newPic} alt="profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-12 h-12 text-primary-foreground" />
+                )}
+              </div>
+              {isEditing && (
+                <input
+                  placeholder="image url"
+                  className="absolute -bottom-8 left-0 text-[10px] w-full border p-1 lowercase"
+                  value={newPic}
+                  onChange={(e) => setNewPic(e.target.value)}
+                />
+              )}
             </div>
 
             <div className="flex-1 text-center md:text-left">
-              <div className="flex items-center gap-4 mb-2">
-                <input
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  className="bg-transparent border-b border-foreground lowercase text-xl focus:outline-none"
-                />
-                <Button onClick={handleUpdateName} size="sm" className="h-6 lowercase text-xs">save name</Button>
+              <div className="mb-2">
+                {isEditing ? (
+                  <input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    className="bg-transparent border-b border-primary lowercase text-2xl font-bold focus:outline-none"
+                  />
+                ) : (
+                  <h1 className="lowercase tracking-wide text-2xl font-bold">{currentProfile?.name}</h1>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-4">
@@ -100,12 +133,12 @@ export function Profile({ userId, onBack }: ProfileProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="lowercase flex items-center gap-2 text-sm">
-              <Target className="w-4 h-4 text-blue-600" />
-              bounties posted
+              <TrendingUp className="w-4 h-4 text-green-600" />
+              bounties claimed
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold text-blue-600">{profile.bountiesPosted || 0}</div>
+            <div className="text-2xl font-bold text-blue-600">{currentProfile?.bountiesPosted || 0}</div>
           </CardContent>
         </Card>
 
@@ -117,7 +150,7 @@ export function Profile({ userId, onBack }: ProfileProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold text-green-600">{profile.bountiesClaimed || 0}</div>
+            <div className="text-3xl font-semibold text-green-600">{currentProfile?.bountiesClaimed || 0}</div>
           </CardContent>
         </Card>
 
@@ -129,7 +162,7 @@ export function Profile({ userId, onBack }: ProfileProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold text-amber-600">{profile.recipesSubmitted || 0}</div>
+            <div className="text-3xl font-semibold text-amber-600">{currentProfile?.recipesSubmitted || 0}</div>
           </CardContent>
         </Card>
 
@@ -141,7 +174,7 @@ export function Profile({ userId, onBack }: ProfileProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold text-purple-600">{profile.verificationsCompleted || 0}</div>
+            <div className="text-3xl font-semibold text-purple-600">{currentProfile?.verificationsCompleted || 0}</div>
           </CardContent>
         </Card>
       </div>
